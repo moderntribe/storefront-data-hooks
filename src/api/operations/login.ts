@@ -10,11 +10,14 @@ export const loginMutation = /* GraphQL */ `
   mutation login($email: String!, $password: String!) {
     login(email: $email, password: $password) {
       result
+      customer {
+        entityId
+      }      
     }
   }
 `
 
-export type LoginResult<T extends { result?: any } = { result?: string }> = T
+export type LoginResult<T extends { result?: any } = { result?: string; customerId: number }> = T
 
 export type LoginVariables = LoginMutationVariables
 
@@ -48,29 +51,20 @@ async function login({
 }): Promise<LoginResult> {
   config = getConfig(config)
 
-  const { data, res } = await config.fetch<RecursivePartial<LoginMutation>>(
-    query,
-    { variables }
-  )
+  const { data, res } = await config.fetch<RecursivePartial<LoginMutation>>(query, { variables })  
 
+  // TODO: eventually ww can remove once all apis ported to graphql
   const cookies = [
     getLoginCookie(res.headers.get('Set-Cookie'), request.headers.host),
-    getLoginCookie(
-      res.headers.get('Set-Cookie'),
-      request.headers.host,
-      'SHOP_SESSION_TOKEN'
-    ),
-    getLoginCookie(
-      res.headers.get('Set-Cookie'),
-      request.headers.host,
-      'Shopper-perf'
-    ),
+    getLoginCookie(res.headers.get('Set-Cookie'), request.headers.host, 'SHOP_SESSION_TOKEN'),
+    getLoginCookie(res.headers.get('Set-Cookie'), request.headers.host, 'Shopper-perf'),
   ].filter((cookie): cookie is string => typeof cookie === 'string')
 
   response.setHeader('Set-Cookie', cookies)
 
   return {
     result: data.login?.result,
+    customerId: data.login?.customer?.entityId || -1,
   }
 }
 
