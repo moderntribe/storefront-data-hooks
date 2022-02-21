@@ -3178,5 +3178,5 @@ export type LoginMutationVariables = Exact<{
 }>
 
 export type LoginMutation = { __typename?: 'Mutation' } & {
-  login: { __typename?: 'LoginResult' } & Pick<LoginResult, 'result'>
+  login: { __typename?: 'LoginResult' } & Pick<LoginResult, 'result' | 'customer'>
 }
